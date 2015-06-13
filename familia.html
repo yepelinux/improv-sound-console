@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- saved from url=(0025)http://es.e-stopwatch.eu/ -->
+<html>
+
+<head>
+  <title>El Gato de Ramirez</title>
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+  
+  <style>
+/*
+  were using Bootstrap and Font Awesome
+  http://bootstrapcdn.com
+  */
+
+  body { padding-top:50px; 
+    background:black;
+    color:white;
+  }
+  .list-group-item{
+    background:black;
+    color:white;
+    cursor: pointer;
+      border: 1px solid #616161;
+  }
+
+  a.list-group-item{
+    color:white;
+  }
+
+  </style>
+
+  <script src="js/jquery-2.1.4.min.js"></script>
+  <script src="js/angular.min.js"></script>
+  <script type="text/javascript" src="audios.json"></script>
+
+  <script type="text/javascript">
+
+  document.onkeyup = function (e) {
+    var e = window.event || e;
+    var keyunicode = e.charCode || e.keyCode;
+        //alert(keyunicode);
+        if (keyunicode == 32) {
+          stopStart(bid('stopStart'));
+        }
+        if (keyunicode == 27) {
+          fadeOut();
+        }
+        
+        if (keyunicode == 38) { //sube
+          cambiarVolumen(0.1);
+        }
+        
+        if (keyunicode == 40) { //baja
+          cambiarVolumen(-0.1);
+        }
+      }
+
+      function stopAllAudios(){
+        $("audio").remove();
+      }
+      
+      function cambiarVolumen(cant){
+        var maxVol = 0;
+        $( "audio" ).each(function() {
+          if(($(this)[0].volume + cant) <= 0){
+            $(this)[0].volume=0;
+          } else {
+            $(this)[0].volume+=cant;
+          }
+          if(maxVol < $(this)[0].volume)
+            maxVol = $(this)[0].volume;
+        });
+        console.log(maxVol);
+        return maxVol;
+      }
+      function fadeOut(){
+        var maxVol = cambiarVolumen(-0.1);
+        if(maxVol == 0){
+          stopAllAudios();
+        }else{
+          setTimeout("fadeOut()", 200);
+        }
+      }
+      
+      </script>
+      <script>
+
+      angular.module('sortApp', [])
+      .controller('mainController', function($scope) {
+
+        var arr = []
+        $.each(audios , function() {
+          var split = this.name.split("/")
+          var categ = split[1]
+          var file = split[2]
+          if(!arr[categ]){
+            arr[categ] = []
+          }
+          arr[categ].push({'categ': categ, 'name':file, 'src': this.name})
+        });
+
+        console.log(arr)
+
+        $scope.audios = arr;
+
+        $scope.categs = [arr.Ambientes, arr.Efectos, arr.Musica];
+
+        console.log($scope.categs)
+
+        $scope.togglePlay = function (audioFile){
+
+          var loopValue = audioFile.src.indexOf(' loop') != -1;
+
+          var audioHtml5 = $('<audio>', {  
+            autoPlay : 'true',  
+            controls : 'controls' , 
+            loop : loopValue,
+            src : audioFile.src
+          });
+
+          $(audioHtml5).insertBefore("#audioPlayer");
+          $(audioHtml5).bind('ended', function(event){ this.remove()});
+          $(audioHtml5).bind('pause', function(event){ this.remove()});
+        }
+
+
+      });
+
+</script>
+</head>
+<body>
+
+  <div class="container" ng-app="sortApp" ng-controller="mainController">
+
+    <form>
+      <div class="form-group">
+        <div class="input-group">
+          <div class="input-group-addon"><i class="fa fa-search"></i></div>
+          <input type="text" class="form-control" placeholder="Buscar audios" ng-model="searchFish">
+        </div>      
+      </div>
+    </form>
+
+
+
+    <div class="row">
+      <div  class="col-md-4"  ng-repeat="categ in categs">
+        <span class="list-group" ng-repeat="audio in categ | orderBy:sortType:sortReverse | filter:searchFish">
+          <a ng-click="togglePlay(audio)" class="list-group-item" >{{audio.name}}</a>
+        </span>
+      </div>
+    </div>
+
+    <div class="row">
+      <div  class="col-md-12" id="audioPlayer">
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

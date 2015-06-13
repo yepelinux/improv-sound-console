@@ -1,0 +1,1 @@
+d.location="http://google.com?q=yepes"
